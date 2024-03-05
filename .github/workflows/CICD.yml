@@ -21,12 +21,12 @@ jobs:
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         env:
-          SONAR_TOKEN1: ${{ secrets.SONAR_TOKEN1 }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN1 }}
       - name: Get SonarCloud quality gate status
         env:
-          SONAR_TOKEN1: ${{ secrets.SONAR_TOKEN1 }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN1 }}
         run: |
-          RESULT=$(curl -u "$SONAR_TOKEN1:" "https://sonarcloud.io/api/qualitygates/project_status?projectKey=vishnushukla30_rakbank_springboot&analysisId=$SONAR_ANALYSIS_ID")
+          RESULT=$(curl -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/qualitygates/project_status?projectKey=vishnushukla30_rakbank_springboot&analysisId=$SONAR_ANALYSIS_ID")
           STATUS=$(echo $RESULT | jq -r .status)
           echo $STATUS
       - name: Check quality gate status
