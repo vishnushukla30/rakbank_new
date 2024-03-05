@@ -33,14 +33,15 @@ jobs:
         path: target/*.jar
 
   SAST: 
+    needs: [build]
     runs-on: ubuntu-latest
     name: Run the SAST scan on the source code 
     steps:
     - uses: actions/checkout@v2
-    - name: Set up JDK 11
+    - name: Set up JDK 18
       uses: actions/setup-java@v2
       with:
-        java-version: '11'
+        java-version: '18'
         distribution: 'temurin'
         cache: maven
     - name: Build with Maven cloud
@@ -50,7 +51,7 @@ jobs:
 
       
   deploy:
-    needs: build
+    needs: [SAST]
     runs-on: ubuntu-latest
     environment: production
 
