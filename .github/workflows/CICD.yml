@@ -62,7 +62,7 @@ jobs:
       needs: [build]
       runs-on: ubuntu-latest
       environment: production
-       steps:
+      steps:
       - name: Checkout repository
         uses: actions/checkout@v2
 
@@ -77,11 +77,11 @@ jobs:
         with:
           name: app-jar
           path: target
-        - name: Build Docker image
-          run: docker build -t 590733205684.dkr.ecr.me-central-1.amazonaws.com/springboot .
+      - name: Build Docker image
+        run: docker build -t 590733205684.dkr.ecr.me-central-1.amazonaws.com/springboot .
 
-        - name: Install and configure AWS CLI
-          run: |
+      - name: Install and configure AWS CLI
+        run: |
             curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
             unzip -q awscliv2.zip
             sudo ./aws/install --update
@@ -89,17 +89,17 @@ jobs:
             aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             aws configure set default.region me-central-1
 
-        - name: Login to ECR
-          run: |
+      - name: Login to ECR
+        run: |
             aws ecr get-login-password --region me-central-1 | docker login --username AWS --password-stdin 590733205684.dkr.ecr.me-central-1.amazonaws.com
 
-        - name: Tag and push Docker image
-          run: |
+      - name: Tag and push Docker image
+        run: |
             docker tag 590733205684.dkr.ecr.me-central-1.amazonaws.com/springboot:latest 590733205684.dkr.ecr.me-central-1.amazonaws.com/springboot:${GITHUB_SHA}
             docker push 590733205684.dkr.ecr.me-central-1.amazonaws.com/springboot:${GITHUB_SHA}
 
-        - name: Deploy to EKS
-          run: |
+      - name: Deploy to EKS
+        run: |
             aws eks update-kubeconfig --region me-central-1 --name rakbank
             mkdir -p k8s
             export ECR_REPOSITORY_URL="590733205684.dkr.ecr.me-central-1.amazonaws.com/springboot:${GITHUB_SHA}"
