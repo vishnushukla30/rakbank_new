@@ -11,31 +11,29 @@ jobs:
       with:
         fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis....
   SAST: 
-      needs: [checkout]
-      name: SonarCloud scan
-      runs-on: ubuntu-latest
-      steps:
-      - uses: actions/checkout@v2
+
+    needs: [ checkout ]
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v3
+
         with:
-          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis....
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
+
+         token: ${{ secrets.GIT_TOKEN }}
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/maven@master
+        continue-on-error: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN1 }}
-      - name: Get SonarCloud quality gate status
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN1 }}
-        run: |
-          RESULT=$(curl -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/qualitygates/project_status?projectKey=vishnushukla30_rakbank_springboot&analysisId=$SONAR_ANALYSIS_ID")
-          STATUS=$(echo $RESULT | jq -r .status)
-          echo $STATUS
-      - name: Check quality gate status
-        if: ${{ env.STATUS == 'ERROR' }}
-        run: |
-          echo "Quality gate status is ERROR"
-          exit 1
-  checkout_build:
+          SNYK_TOKEN: ${{ secrets.SNYK_KEY }}
+        with:
+          command: code test
+
+          args: --json-file-output=snyk-report.json
+  build:
+      needs: [SAST]
       runs-on: ubuntu-latest
       steps:
       - name: Checkout repository
@@ -61,7 +59,7 @@ jobs:
           path: target/*.jar
       
   deploy:
-      needs: [SAST]
+      needs: [build]
       runs-on: ubuntu-latest
       environment: production
       steps: 
