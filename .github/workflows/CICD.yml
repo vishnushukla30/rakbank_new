@@ -16,15 +16,14 @@ jobs:
         java-version: 18
         distribution: 'adopt'
 
-    - name: Cache Maven packages
-      uses: actions/cache@v2
+    - name: Build Maven
+      run: mvn -B package --file pom.xml
+    - name: Upload to artifact
+      uses: actions/upload-artifact@v3
       with:
-        path: ~/.m2
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-        restore-keys: ${{ runner.os }}-m2
-    
-    - name: Build and test with Maven
-      run: mvn --batch-mode --update-snapshots --no-transfer-progress clean package
+        name: ${{ github.event.repository.name }}-artifact
+        path: |
+          ./target/*.jar
 
     - name: Upload JAR file
       uses: actions/upload-artifact@v2
