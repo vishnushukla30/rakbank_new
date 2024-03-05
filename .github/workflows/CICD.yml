@@ -17,7 +17,7 @@ jobs:
         distribution: 'adopt'
 
     - name: Build Maven
-      run: mvn -B package --file pom.xml
+      run: mvn -B package
     - name: Upload to artifact
       uses: actions/upload-artifact@v3
       with:
