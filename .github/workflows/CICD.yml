@@ -22,6 +22,15 @@ jobs:
         path: ~/.m2
         key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
         restore-keys: ${{ runner.os }}-m2
+    
+    - name: Build and test with Maven
+      run: mvn --batch-mode --update-snapshots --no-transfer-progress clean package
+
+    - name: Upload JAR file
+      uses: actions/upload-artifact@v2
+      with:
+        name: app-jar
+        path: target/*.jar
   SAST: 
     runs-on: ubuntu-latest
     name: Run the SAST scan on the source code 
