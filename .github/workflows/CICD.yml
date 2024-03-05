@@ -3,68 +3,68 @@ name: rakbank
 on: [push, workflow_dispatch,pull_request]
 
 jobs:
-  build:
+    checkout:
+        name: Code checkout
     runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
-
-    - name: Set up JDK 18
-      uses: actions/setup-java@v2
-      with:
-        java-version: 18
-        distribution: 'adopt'
-
-    - name: Cache Maven packages
-      uses: actions/cache@v2
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-        restore-keys: ${{ runner.os }}-m2
-
-    - name: Build and test with Maven
-      run: mvn --batch-mode --update-snapshots --no-transfer-progress clean package
-
-    - name: Upload JAR file
-      uses: actions/upload-artifact@v2
-      with:
-        name: app-jar
-        path: target/*.jar
-
-  SAST: 
-    needs: [build]
-    runs-on: ubuntu-latest
-    name: Run the SAST scan on the source code 
     steps:
     - uses: actions/checkout@v2
-    - name: Set up JDK 18
-      uses: actions/setup-java@v2
       with:
-        java-version: '18'
-        distribution: 'temurin'
-        cache: maven
-    - name: Build with Maven cloud
-      run:  mvn -B verify sonar:sonar -Dsonar.projectKey=vishnushukla30_rakbank_springboot -Dsonar.organization=vishnushukla30 -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN1
-      env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN1 }}
+        fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis....
+    SAST: 
+      needs: [checkout]
+      name: SonarCloud scan
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis....
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          SONAR_TOKEN1: ${{ secrets.SONAR_TOKEN1 }}
+      - name: Get SonarCloud quality gate status
+        env:
+          SONAR_TOKEN1: ${{ secrets.SONAR_TOKEN1 }}
+      run: |
+        RESULT=$(curl -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/qualitygates/project_status?projectKey=GIGXPad-com_xpad-web-v2&analysisId=$SONAR_ANALYSIS_ID")
+        STATUS=$(echo $RESULT | jq -r .status)
+        echo $STATUS
+        - name: Check quality gate status
+        if: ${{ env.STATUS == 'ERROR' }}
+        run: |
+        echo "Quality gate status is ERROR"
+        exit 1
+    checkout_build:
+      runs-on: ubuntu-latest
 
-      
-  deploy:
-    needs: [SAST]
-    runs-on: ubuntu-latest
-    environment: production
-
-    steps:
+      steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-
       - name: Set up JDK 18
         uses: actions/setup-java@v2
         with:
           java-version: 18
           distribution: 'adopt'
+      - name: Cache Maven packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      - name: Build
+        run: mvn --batch-mode --update-snapshots --no-transfer-progress clean package
 
+      - name: Upload JAR file
+        uses: actions/upload-artifact@v2
+        with:
+          name: app-jar
+          path: target/*.jar
+      
+    deploy:
+      needs: [SAST]
+      runs-on: ubuntu-latest
+      environment: production
+      steps: 
       - name: Download JAR file
         uses: actions/download-artifact@v2
         with:
