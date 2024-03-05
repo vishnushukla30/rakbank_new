@@ -3,14 +3,14 @@ name: rakbank
 on: [push, workflow_dispatch,pull_request]
 
 jobs:
-    checkout:
-        name: Code checkout
+  checkout:
+    name: Code checkout
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis....
-    SAST: 
+  SAST: 
       needs: [checkout]
       name: SonarCloud scan
       runs-on: ubuntu-latest
@@ -34,7 +34,7 @@ jobs:
         run: |
         echo "Quality gate status is ERROR"
         exit 1
-    checkout_build:
+  checkout_build:
       runs-on: ubuntu-latest
 
       steps:
@@ -60,7 +60,7 @@ jobs:
           name: app-jar
           path: target/*.jar
       
-    deploy:
+  deploy:
       needs: [SAST]
       runs-on: ubuntu-latest
       environment: production
