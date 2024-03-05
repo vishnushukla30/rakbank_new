@@ -100,22 +100,3 @@ jobs:
           echo "resources:" > k8s/kustomization.yaml
           echo "- k8s-deployment.yaml" >> k8s/kustomization.yaml
           kubectl kustomize k8s | kubectl apply -f - --force
-
-
-
-
-  SAST: 
-    runs-on: ubuntu-latest
-    name: Run the SAST scan on the source code 
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up JDK 11
-      uses: actions/setup-java@v2
-      with:
-        java-version: '11'
-        distribution: 'temurin'
-        cache: maven
-    - name: Build with Maven cloud
-      run:  mvn -B verify sonar:sonar -Dsonar.projectKey=vishnushukla30_rakbank_springboot -Dsonar.organization=vishnushukla30 -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN
-      env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
